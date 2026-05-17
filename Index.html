@@ -8,7 +8,6 @@
     <style>
         :root {
             --bg-color: #0b0e14;
-            --ton-blue: #0088CC;
             --accent-glow: rgba(212, 175, 55, 0.4);
         }
 
@@ -28,7 +27,6 @@
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
-            /* Включаем 3D-пространство для всего экрана */
             perspective: 1000px;
         }
 
@@ -64,7 +62,6 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            /* Включаем 3D-перспективу для области клика */
             perspective: 1000px;
         }
 
@@ -81,8 +78,6 @@
             cursor: pointer;
             z-index: 5;
             -webkit-tap-highlight-color: transparent;
-            
-            /* Плавное возвращение монеты в исходное состояние */
             transition: transform 0.15s ease-out, filter 0.15s ease-out;
             transform-style: preserve-3d;
         }
@@ -162,41 +157,30 @@
                 tg.HapticFeedback.impactOccurred('light');
             }
 
-            // Расчет наклона монеты
             applyTilt(x, y);
             showPlusText(x, y);
         }
 
         function applyTilt(clientX, clientY) {
             const rect = clickBtn.getBoundingClientRect();
-            
-            // Вычисляем центр монеты
             const coinCenterX = rect.left + rect.width / 2;
             const coinCenterY = rect.top + rect.height / 2;
 
-            // Расстояние от центра монеты до места клика
             const deltaX = clientX - coinCenterX;
             const deltaY = clientY - coinCenterY;
 
-            // Переводим в проценты от радиуса монеты (макс значение около 1 или -1)
             const percentX = deltaX / (rect.width / 2);
             const percentY = deltaY / (rect.height / 2);
 
-            // Максимальный угол наклона в градусах
             const maxTilt = 25; 
 
-            // Переворачиваем оси: клик сверху наклоняет по X вперед, клик справа наклоняет по Y вправо
             const tiltX = -percentY * maxTilt;
             const tiltY = percentX * maxTilt;
 
-            // Убираем transition на время нажатия, чтобы наклон реагировал мгновенно
             clickBtn.style.transition = 'none';
-            // Применяем наклон и легкое уменьшение всей монеты (эффект нажатия)
             clickBtn.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(0.95)`;
             clickBtn.style.filter = 'brightness(0.9)';
 
-            // Возвращаем монету в исходное положение после того, как палец/курсор отпустили
-            // Используем таймаут, чтобы анимация успела отработать при быстром тапе
             setTimeout(() => {
                 clickBtn.style.transition = 'transform 0.15s ease-out, filter 0.15s ease-out';
                 clickBtn.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
