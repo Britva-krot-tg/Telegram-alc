@@ -29,12 +29,13 @@
             perspective: 1000px;
         }
 
-        body::before {
-            content: '';
+        /* Отдельный изолированный слой затемнения фона */
+        .bg-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.4);
             z-index: 1;
+            pointer-events: none; /* Клики проходят насквозь */
         }
 
         .header {
@@ -50,7 +51,7 @@
             align-items: center;
             gap: 10px;
             font-variant-numeric: tabular-nums;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
         }
 
         .click-area {
@@ -71,15 +72,16 @@
             border-radius: 50%;
             background: url('coin.png') no-repeat center center;
             background-size: contain;
-            /* Подсветка полностью убрана */
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 10;
+            
+            /* Самый высокий z-index, чтобы монета была поверх абсолютно всего */
+            z-index: 999; 
+            
             transition: transform 0.15s ease-out, filter 0.15s ease-out;
             transform-style: preserve-3d;
-            /* Кнопка гарантированно принимает клики самостоятельно */
-            pointer-events: auto; 
+            pointer-events: auto; /* Монета обязана принимать клики */
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -90,7 +92,7 @@
             color: #ffd700;
             pointer-events: none;
             animation: floatUp 0.8s ease-out forwards;
-            z-index: 100;
+            z-index: 1000; /* Выше монеты */
             text-shadow: 0 2px 10px rgba(255, 215, 0, 0.6);
             transform: translate(-50%, -50%);
         }
@@ -114,6 +116,8 @@
     </style>
 </head>
 <body>
+
+    <div class="bg-overlay"></div>
 
     <div class="header">
         <div id="username" style="color: #ccc; margin-bottom: 5px; font-weight: 600;">Игрок</div>
@@ -191,7 +195,7 @@
             }, 100);
         }
 
-        // События переназначены строго на clickBtn (монету)
+        // Слушаем тачи строго на кнопке-монете
         clickBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
