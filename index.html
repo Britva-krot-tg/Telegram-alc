@@ -8,7 +8,6 @@
     <style>
         :root {
             --bg-color: #0b0e14;
-            --accent-glow: rgba(212, 175, 55, 0.4);
         }
 
         body {
@@ -47,11 +46,11 @@
         .score-container {
             font-size: 50px;
             font-weight: bold;
-            text-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
             display: flex;
             align-items: center;
             gap: 10px;
             font-variant-numeric: tabular-nums;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
 
         .click-area {
@@ -72,15 +71,16 @@
             border-radius: 50%;
             background: url('coin.png') no-repeat center center;
             background-size: contain;
-            box-shadow: 0 0 40px var(--accent-glow);
+            /* Подсветка полностью убрана */
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+            z-index: 10;
             transition: transform 0.15s ease-out, filter 0.15s ease-out;
             transform-style: preserve-3d;
-            pointer-events: auto; /* Гарантирует, что кнопка принимает клики */
+            /* Кнопка гарантированно принимает клики самостоятельно */
+            pointer-events: auto; 
+            -webkit-tap-highlight-color: transparent;
         }
 
         .floating-text {
@@ -151,7 +151,6 @@
             usernameEl.innerText = tg.initDataUnsafe.user.first_name;
         }
 
-        // Универсальная функция обработки нажатия
         function handleInteraction(clientX, clientY) {
             score += REWARD;
             scoreEl.innerText = score.toFixed(4);
@@ -165,7 +164,6 @@
             showPlusText(clientX, clientY);
         }
 
-        // Эффект наклона 3D
         function applyTilt(clientX, clientY) {
             const rect = clickBtn.getBoundingClientRect();
             const coinCenterX = rect.left + rect.width / 2;
@@ -193,7 +191,7 @@
             }, 100);
         }
 
-        // Поддержка мобильных устройств (Мультитач)
+        // События переназначены строго на clickBtn (монету)
         clickBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -201,12 +199,10 @@
             }
         }, { passive: false });
 
-        // Поддержка ПК (Мышка)
         clickBtn.addEventListener('mousedown', (e) => {
             handleInteraction(e.clientX, e.clientY);
         });
 
-        // Всплывающие цифры
         function showPlusText(x, y) {
             const text = document.createElement('div');
             text.className = 'floating-text';
