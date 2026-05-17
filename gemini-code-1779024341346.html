@@ -9,11 +9,13 @@
         :root {
             --bg-color: #0b0e14;
             --ton-blue: #0088CC;
-            --accent-glow: rgba(0, 136, 204, 0.5);
+            --accent-glow: rgba(212, 175, 55, 0.4);
         }
 
         body {
             font-family: 'Segoe UI', Roboto, sans-serif;
+            background: url('bg.png') no-repeat center center;
+            background-size: cover;
             background-color: var(--bg-color);
             color: white;
             margin: 0;
@@ -26,6 +28,16 @@
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
+            /* Включаем 3D-пространство для всего экрана */
+            perspective: 1000px;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
         }
 
         .header {
@@ -37,7 +49,7 @@
         .score-container {
             font-size: 50px;
             font-weight: bold;
-            text-shadow: 0 0 25px var(--accent-glow);
+            text-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -52,44 +64,38 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            /* Включаем 3D-перспективу для области клика */
+            perspective: 1000px;
         }
 
         .main-button {
-            width: 260px;
-            height: 260px;
+            width: 280px;
+            height: 280px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #00aaff, #006699);
-            box-shadow: 0 0 60px var(--accent-glow), inset 0 0 20px rgba(255,255,255,0.2);
+            background: url('coin.png') no-repeat center center;
+            background-size: contain;
+            box-shadow: 0 0 40px var(--accent-glow);
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.05s ease;
-            border: 6px solid rgba(255, 255, 255, 0.1);
             z-index: 5;
             -webkit-tap-highlight-color: transparent;
-        }
-
-        .main-button:active {
-            transform: scale(0.94);
-        }
-
-        .ton-logo {
-            width: 140px;
-            height: 140px;
-            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
-            pointer-events: none;
+            
+            /* Плавное возвращение монеты в исходное состояние */
+            transition: transform 0.15s ease-out, filter 0.15s ease-out;
+            transform-style: preserve-3d;
         }
 
         .floating-text {
             position: absolute;
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
-            color: #00d4ff;
+            color: #ffd700;
             pointer-events: none;
             animation: floatUp 0.8s ease-out forwards;
             z-index: 100;
-            text-shadow: 0 2px 10px rgba(0, 212, 255, 0.6);
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.6);
             transform: translate(-50%, -50%);
         }
 
@@ -101,31 +107,27 @@
         .info-panel {
             margin-bottom: 40px;
             padding: 12px 30px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 50px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             font-weight: 500;
-            color: #8899a6;
+            color: #e0e0e0;
             z-index: 10;
+            backdrop-filter: blur(5px);
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div id="username" style="color: #8899a6; margin-bottom: 5px;">Игрок</div>
+        <div id="username" style="color: #ccc; margin-bottom: 5px; font-weight: 600;">Игрок</div>
         <div class="score-container">
             <span id="score">0.0000</span>
         </div>
     </div>
 
     <div class="click-area" id="clickArea">
-        <div class="main-button" id="clickBtn">
-            <svg class="ton-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 12L12 45L50 88L88 45L50 12Z" fill="white"/>
-                <path d="M32 48H68M40 58H60" stroke="#0088CC" stroke-width="5" stroke-linecap="round"/>
-            </svg>
-        </div>
+        <div class="main-button" id="clickBtn"></div>
     </div>
 
     <div class="info-panel">
@@ -160,7 +162,46 @@
                 tg.HapticFeedback.impactOccurred('light');
             }
 
+            // Расчет наклона монеты
+            applyTilt(x, y);
             showPlusText(x, y);
+        }
+
+        function applyTilt(clientX, clientY) {
+            const rect = clickBtn.getBoundingClientRect();
+            
+            // Вычисляем центр монеты
+            const coinCenterX = rect.left + rect.width / 2;
+            const coinCenterY = rect.top + rect.height / 2;
+
+            // Расстояние от центра монеты до места клика
+            const deltaX = clientX - coinCenterX;
+            const deltaY = clientY - coinCenterY;
+
+            // Переводим в проценты от радиуса монеты (макс значение около 1 или -1)
+            const percentX = deltaX / (rect.width / 2);
+            const percentY = deltaY / (rect.height / 2);
+
+            // Максимальный угол наклона в градусах
+            const maxTilt = 25; 
+
+            // Переворачиваем оси: клик сверху наклоняет по X вперед, клик справа наклоняет по Y вправо
+            const tiltX = -percentY * maxTilt;
+            const tiltY = percentX * maxTilt;
+
+            // Убираем transition на время нажатия, чтобы наклон реагировал мгновенно
+            clickBtn.style.transition = 'none';
+            // Применяем наклон и легкое уменьшение всей монеты (эффект нажатия)
+            clickBtn.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(0.95)`;
+            clickBtn.style.filter = 'brightness(0.9)';
+
+            // Возвращаем монету в исходное положение после того, как палец/курсор отпустили
+            // Используем таймаут, чтобы анимация успела отработать при быстром тапе
+            setTimeout(() => {
+                clickBtn.style.transition = 'transform 0.15s ease-out, filter 0.15s ease-out';
+                clickBtn.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+                clickBtn.style.filter = 'brightness(1)';
+            }, 100);
         }
 
         clickBtn.addEventListener('touchstart', (e) => {
