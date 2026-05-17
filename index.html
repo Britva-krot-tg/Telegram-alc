@@ -63,6 +63,7 @@
             align-items: center;
             overflow: hidden;
             perspective: 1000px;
+            z-index: 5;
         }
 
         .main-button {
@@ -76,10 +77,10 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            z-index: 5;
             -webkit-tap-highlight-color: transparent;
             transition: transform 0.15s ease-out, filter 0.15s ease-out;
             transform-style: preserve-3d;
+            pointer-events: auto; /* Гарантирует, что кнопка принимает клики */
         }
 
         .floating-text {
@@ -131,8 +132,10 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        if (tg.ready) tg.ready();
+        if (tg) {
+            tg.expand();
+            if (tg.ready) tg.ready();
+        }
 
         const scoreEl = document.getElementById('score');
         const usernameEl = document.getElementById('username');
@@ -144,23 +147,25 @@
         let score = parseFloat(localStorage.getItem('ton_balance_v3')) || 0;
         scoreEl.innerText = score.toFixed(4);
 
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
             usernameEl.innerText = tg.initDataUnsafe.user.first_name;
         }
 
-        function handleInteraction(x, y) {
+        // Универсальная функция обработки нажатия
+        function handleInteraction(clientX, clientY) {
             score += REWARD;
             scoreEl.innerText = score.toFixed(4);
             localStorage.setItem('ton_balance_v3', score);
 
-            if (tg.HapticFeedback) {
+            if (tg && tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('light');
             }
 
-            applyTilt(x, y);
-            showPlusText(x, y);
+            applyTilt(clientX, clientY);
+            showPlusText(clientX, clientY);
         }
 
+        // Эффект наклона 3D
         function applyTilt(clientX, clientY) {
             const rect = clickBtn.getBoundingClientRect();
             const coinCenterX = rect.left + rect.width / 2;
@@ -188,6 +193,7 @@
             }, 100);
         }
 
+        // Поддержка мобильных устройств (Мультитач)
         clickBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -195,12 +201,12 @@
             }
         }, { passive: false });
 
+        // Поддержка ПК (Мышка)
         clickBtn.addEventListener('mousedown', (e) => {
-            if (!('ontouchstart' in window)) {
-                handleInteraction(e.clientX, e.clientY);
-            }
+            handleInteraction(e.clientX, e.clientY);
         });
 
+        // Всплывающие цифры
         function showPlusText(x, y) {
             const text = document.createElement('div');
             text.className = 'floating-text';
