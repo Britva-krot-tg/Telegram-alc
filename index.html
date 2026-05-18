@@ -643,11 +643,12 @@
             setTimeout(() => {
                 try {
                     if (typeof TON_CONNECT_UI !== 'undefined') {
-                        tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                            manifestUrl: "https://vsevolodvolin6-collab.github.io/Telegram-alc/tonconnect-manifest.json",
-                            
-                            buttonRootId: 'ton-connect-btn'
-                        });
+    tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: "https://vsevolodvolin6-collab.github.io/Telegram-alc/tonconnect-manifest.json", // Тут твоя ссылка в кавычках и обязательно запятая на конце!
+        buttonRootId: 'ton-connect-btn'
+    });
+                    }
+                    
                         console.log("TON Connect инициализирован");
                     }
                 } catch(err) {
