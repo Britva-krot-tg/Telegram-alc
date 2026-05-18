@@ -637,20 +637,24 @@
             setTimeout(() => text.remove(), 800);
         }
 
+        // В самом низу Скрипта (Часть 3)
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 try {
                     if (typeof TON_CONNECT_UI !== 'undefined') {
                         tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                            manifestUrl: MY_MANIFEST_URL,
+                            manifestUrl: "https://vsevolodvolin6-collab.github.io/Telegram-alc/tonconnect-manifest.json",
+                            
                             buttonRootId: 'ton-connect-btn'
                         });
+                        console.log("TON Connect инициализирован");
                     }
                 } catch(err) {
-                    console.error("Ошибка TON Connect:", err);
+                    console.error("Ошибка кошелька:", err);
                 }
             }, 500);
         });
+            
 
         regenerateEnergy();
         setInterval(regenerateEnergy, 1000);
