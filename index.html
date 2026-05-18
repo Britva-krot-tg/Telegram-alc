@@ -377,10 +377,9 @@
         </div>
     </div>
         <script>
-        // --- ⚠️ НАСТРОЙКА ДАННЫХ (ЗАМЕНИ НА СВОИ) ⚠️ ---
+        // --- ⚠️ НАСТРОЙКА ДАННЫХ TON (ОБЯЗАТЕЛЬНО ЗАМЕНИ НА СВОИ ССЫЛКИ В КАВЫЧКАХ) ⚠️ ---
         const MY_TON_WALLET = "UQBT3bJqKbJMgQpWc4I5zPc15ep1eFxwuo-ocyTQ6WyJKV8q"; 
-        const MY_MANIFEST_URL = "https://vsevolodvolin6-collab.github.io/Telegram-alc/tonconnect-manifest.json",
-            
+        const MY_MANIFEST_URL = "https://vsevolodvolin6-collab.github.io/Telegram-alc/tonconnect-manifest.json";
 
         const tg = window.Telegram.WebApp;
         if (tg) {
@@ -406,6 +405,7 @@
         const BASE_ENERGY = 400;
         const REGEN_TIME_MS = 8 * 60 * 60 * 1000; 
 
+        // Загрузка локального прогресса устройства
         let currentUpgradeLevel = parseInt(localStorage.getItem('energy_upgrade_level_v4')) || 0;
         let score = parseFloat(localStorage.getItem('ton_balance_v4')) || 0;
         scoreEl.innerText = score.toFixed(4);
@@ -455,6 +455,7 @@
             energyFillEl.style.width = percent + '%';
         }
 
+        // Кнопки открытия/закрытия магазина
         openShopBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -521,6 +522,7 @@
             }
         }
 
+        // Логика кликов и анимаций монеты
         let clickTimestamps = [];
         function checkClickRate() {
             const now = Date.now();
@@ -638,17 +640,15 @@
             setTimeout(() => text.remove(), 800);
         }
 
-        // В самом низу Скрипта (Часть 3)
+        // Автономное и безопасное подключение кошелька TON Connect
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 try {
                     if (typeof TON_CONNECT_UI !== 'undefined') {
-    tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-        manifestUrl: "https://vsevolodvolin6-collab.github.io/Telegram-alc/tonconnect-manifest.json", // Тут твоя ссылка в кавычках и обязательно запятая на конце!
-        buttonRootId: 'ton-connect-btn'
-    });
-                    }
-                    
+                        tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                            manifestUrl: MY_MANIFEST_URL,
+                            buttonRootId: 'ton-connect-btn'
+                        });
                         console.log("TON Connect инициализирован");
                     }
                 } catch(err) {
@@ -656,7 +656,6 @@
                 }
             }, 500);
         });
-            
 
         regenerateEnergy();
         setInterval(regenerateEnergy, 1000);
