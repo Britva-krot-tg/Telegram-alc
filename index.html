@@ -377,8 +377,9 @@
         </div>
     </div>
         <script>
-        // --- ⚠️ НАСТРОЙКА АДРЕСА TON (ЗАМЕНИ НА СВОЙ) ⚠️ ---
+        // --- ⚠️ НАСТРОЙКА ДАННЫХ (ЗАМЕНИ НА СВОИ) ⚠️ ---
         const MY_TON_WALLET = "UQBT3bJqKbJMgQpWc4I5zPc15ep1eFxwuo-ocyTQ6WyJKV8q"; 
+        const MY_MANIFEST_URL = "https://vsevolodvolin6-collab.github.io/Telegram-alc/tonconnect-manifest.json";
 
         const tg = window.Telegram.WebApp;
         if (tg) {
@@ -641,7 +642,7 @@
                 try {
                     if (typeof TON_CONNECT_UI !== 'undefined') {
                         tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                            manifestUrl: 'https://raw.githubusercontent.com/ton-connect/demo-dapp-with-react/master/public/tonconnect-manifest.json',
+                            manifestUrl: MY_MANIFEST_URL,
                             buttonRootId: 'ton-connect-btn'
                         });
                     }
