@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -107,7 +107,7 @@
             justify-content: center;
             align-items: center;
             z-index: 99; 
-            transition: transform 0.15s ease-out, filter 0.15s ease-out;
+            transition: transform 0.05s ease-out, filter 0.05s ease-out;
             transform-style: preserve-3d;
             pointer-events: auto;
             -webkit-tap-highlight-color: transparent;
@@ -148,16 +148,6 @@
             margin-bottom: 40px;
             gap: 12px;
             z-index: 10;
-        }
-
-        .info-panel {
-            padding: 12px 30px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-weight: 500;
-            color: #e0e0e0;
-            backdrop-filter: blur(5px);
         }
 
         .energy-container {
@@ -307,12 +297,12 @@
     <div class="bg-overlay"></div>
 
     <div class="top-bar">
-        <button class="shop-trigger-btn" id="openShopBtn">🛍️ Магазин</button>
+        <button class="shop-trigger-btn" id="openShopBtn">🛍️ Shop</button>
         <div id="ton-connect-btn"></div>
     </div>
 
     <div class="header">
-        <div id="username" style="color: #ccc; margin-bottom: 5px; font-weight: 600;">Игрок</div>
+        <div id="username" style="color: #ccc; margin-bottom: 5px; font-weight: 600;">Player</div>
         <div class="score-container">
             <span id="score">0.0000</span>
         </div>
@@ -323,10 +313,6 @@
     </div>
 
     <div class="bottom-container">
-        <div class="info-panel" id="infoPanel">
-            Награда: +0.0025 ALC за тап
-        </div>
-        
         <div class="energy-container">
             <div class="energy-text">⚡ <span id="energyValue">400</span> / <span id="maxEnergyValue">400</span></div>
             <div class="energy-bar-bg">
@@ -337,47 +323,47 @@
 
     <div class="modal-overlay" id="shopModal">
         <div class="modal-content">
-            <div class="modal-title">⚡ Апгрейд Энергии</div>
+            <div class="modal-title">⚡ Energy Upgrade</div>
             <div class="upgrade-list">
                 
                 <div class="upgrade-item" id="item-l1">
                     <div class="upgrade-info">
-                        <div class="upgrade-name">Энергия Ур.1 (×2)</div>
-                        <div class="upgrade-desc">Максимум: 800 энергии</div>
+                        <div class="upgrade-name">Energy Lvl.1 (×2)</div>
+                        <div class="upgrade-desc">Maximum: 800 energy</div>
                     </div>
                     <button class="upgrade-btn" id="btn-l1" onclick="buyUpgrade(1, 2)">2 TON</button>
                 </div>
 
                 <div class="upgrade-item" id="item-l2">
                     <div class="upgrade-info">
-                        <div class="upgrade-name">Энергия Ур.2 (×10)</div>
-                        <div class="upgrade-desc">Максимум: 4000 энергии</div>
+                        <div class="upgrade-name">Energy Lvl.2 (×10)</div>
+                        <div class="upgrade-desc">Maximum: 4000 energy</div>
                     </div>
                     <button class="upgrade-btn" id="btn-l2" onclick="buyUpgrade(2, 10)">10 TON</button>
                 </div>
 
                 <div class="upgrade-item" id="item-l3">
                     <div class="upgrade-info">
-                        <div class="upgrade-name">Энергия Ур.3 (×50)</div>
-                        <div class="upgrade-desc">Максимум: 20000 энергии</div>
+                        <div class="upgrade-name">Energy Lvl.3 (×50)</div>
+                        <div class="upgrade-desc">Maximum: 20000 energy</div>
                     </div>
                     <button class="upgrade-btn" id="btn-l3" onclick="buyUpgrade(3, 45)">45 TON</button>
                 </div>
 
                 <div class="upgrade-item" id="item-l4">
                     <div class="upgrade-info">
-                        <div class="upgrade-name">Энергия Ур.4 (×100)</div>
-                        <div class="upgrade-desc">Максимум: 40000 энергии</div>
+                        <div class="upgrade-name">Energy Lvl.4 (×100)</div>
+                        <div class="upgrade-desc">Maximum: 40000 energy</div>
                     </div>
                     <button class="upgrade-btn" id="btn-l4" onclick="buyUpgrade(4, 85)">85 TON</button>
                 </div>
 
             </div>
-            <button class="close-modal-btn" id="closeShopBtn">Закрыть</button>
+            <button class="close-modal-btn" id="closeShopBtn">Close</button>
         </div>
     </div>
         <script>
-        // --- ⚠️ НАСТРОЙКА ДАННЫХ TON (ОБЯЗАТЕЛЬНО ЗАМЕНИ НА СВОИ ССЫЛКИ В КАВЫЧКАХ) ⚠️ ---
+        // --- ⚠️ TON DATA SETTINGS ⚠️ ---
         const MY_TON_WALLET = "UQBT3bJqKbJMgQpWc4I5zPc15ep1eFxwuo-ocyTQ6WyJKV8q"; 
         const MY_MANIFEST_URL = "https://britva-krot-tg.github.io/Telegram-alc/tonconnect-manifest.json";
 
@@ -401,11 +387,11 @@
         const closeShopBtn = document.getElementById('closeShopBtn');
 
         const REWARD = 0.0025;
-        const MAX_CPS = 20; 
+        const MAX_CPS = 9; // ⚡ Ровно 9 тапов в секунду
         const BASE_ENERGY = 400;
         const REGEN_TIME_MS = 8 * 60 * 60 * 1000; 
 
-        // Загрузка локального прогресса устройства
+        // Local storage loading
         let currentUpgradeLevel = parseInt(localStorage.getItem('energy_upgrade_level_v4')) || 0;
         let score = parseFloat(localStorage.getItem('ton_balance_v4')) || 0;
         scoreEl.innerText = score.toFixed(4);
@@ -455,7 +441,7 @@
             energyFillEl.style.width = percent + '%';
         }
 
-        // Кнопки открытия/закрытия магазина
+        // Shop open/close buttons
         openShopBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -476,7 +462,7 @@
                 
                 if (i <= currentUpgradeLevel) {
                     row.classList.add('bought');
-                    btn.innerText = "Куплено";
+                    btn.innerText = "Purchased";
                     btn.disabled = true;
                 } else if (i !== currentUpgradeLevel + 1) {
                     btn.disabled = true;
@@ -493,7 +479,6 @@
 
         async function buyUpgrade(level, priceTon) {
             if (!tonConnectUI || !tonConnectUI.connected) {
-                alert("Пожалуйста, подключите кошелек TON кнопкой вверху страницы!");
                 return;
             }
 
@@ -515,14 +500,14 @@
                     
                     updateEnergyUI();
                     updateShopUI();
-                    
+                    console.log(`Successful upgrade to level ${level}`);
                 }
             } catch (error) {
-                
+                console.log("Transaction canceled or failed.");
             }
         }
 
-        // Логика кликов и анимаций монеты
+        // Click and animation logic
         let clickTimestamps = [];
         function checkClickRate() {
             const now = Date.now();
@@ -590,11 +575,11 @@
 
             setTimeout(() => {
                 if (!clickBtn.classList.contains('blocked')) {
-                    clickBtn.style.transition = 'transform 0.15s ease-out, filter 0.15s ease-out';
+                    clickBtn.style.transition = 'transform 0.05s ease-out, filter 0.05s ease-out';
                     clickBtn.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
                     clickBtn.style.filter = 'brightness(1)';
                 }
-            }, 100);
+            }, 40); // ⚡ Быстрый возврат монеты за 40 мс
         }
 
         setInterval(() => {
@@ -640,21 +625,25 @@
             setTimeout(() => text.remove(), 800);
         }
 
-        // Автономное и безопасное подключение кошелька TON Connect
+        // Safe TON Connect Initialization
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 try {
                     if (typeof TON_CONNECT_UI !== 'undefined') {
                         tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
                             manifestUrl: MY_MANIFEST_URL,
-                            buttonRootId: 'ton-connect-btn'
+                            buttonRootId: 'ton-connect-btn',
+                            uiOptions: {
+                                uiPreferences: {
+                                    theme: 'DARK'
+                                }
+                            }
                         });
-                        console.log("TON Connect инициализирован");
+                        console.log("TON Connect initialized");
                     }
                  } catch(err){
-                
-                }
-                
+                     console.log("Wallet UI initialization error suppressed");
+                 }
             }, 500);
         });
 
