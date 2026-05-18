@@ -286,7 +286,9 @@
             background: #2c3545;
             color: #68758c;
             cursor: not-allowed;
-        }.close-modal-btn {
+        }
+
+        .close-modal-btn {
             background: transparent;
             border: 1px solid rgba(255,255,255,0.3);
             color: #ccc;
@@ -296,7 +298,8 @@
             font-size: 14px;
         }
     </style>
-</head><body>
+</head>
+<body>
 
     <div class="bg-overlay"></div>
 
@@ -368,7 +371,7 @@
         </div>
     </div>
     <script>
-        // --- ⚠️ TON DATA SETTINGS ⚠️ ---
+                // --- ⚠️ TON DATA SETTINGS ⚠️ ---
         const MY_TON_WALLET = "UQBT3bJqKbJMgQpWc4I5zPc15ep1eFxwuo-ocyTQ6WyJKV8q"; 
         const MY_MANIFEST_URL = "https://britva-krot-tg.github.io/Telegram-alc/tonconnect-manifest.json";
 
@@ -448,7 +451,7 @@
 
             // Логика таймера обратного отсчета
             if (currentEnergy >= maxEnergy) {
-                cooldownTimerEl.innerText = ""; // Прячем, если энергия полная
+                cooldownTimerEl.innerText = ""; 
             } else {
                 const energyNeeded = maxEnergy - currentEnergy;
                 const energyPerMs = maxEnergy / REGEN_TIME_MS;
@@ -458,12 +461,11 @@
                 const minutes = Math.floor((totalSeconds % 3600) / 60);
                 const seconds = totalSeconds % 60;
 
-                // Красивое форматирование с нулями (например, 07:05:09)
                 const displayHours = String(hours).padStart(2, '0');
                 const displayMinutes = String(minutes).padStart(2, '0');
                 const displaySeconds = String(seconds).padStart(2, '0');
 
-                cooldownTimerEl.innerText = Full in: ${displayHours}:${displayMinutes}:${displaySeconds};
+                cooldownTimerEl.innerText = `Full in: ${displayHours}:${displayMinutes}:${displaySeconds}`;
             }
         }
 
@@ -482,8 +484,8 @@
 
         function updateShopUI() {
             for (let i = 1; i <= 4; i++) {
-                const btn = document.getElementById(btn-l${i});
-                const row = document.getElementById(item-l${i});
+                const btn = document.getElementById(`btn-l${i}`);
+                const row = document.getElementById(`item-l${i}`);
                 if(!btn || !row) continue;
                 
                 if (i <= currentUpgradeLevel) {
@@ -526,7 +528,7 @@
                     
                     updateEnergyUI();
                     updateShopUI();
-                    console.log(Successful upgrade to level ${level});
+                    console.log(`Successful upgrade to level ${level}`);
                 }
             } catch (error) {
                 console.log("Transaction canceled or failed.");
@@ -595,7 +597,7 @@
             const tiltY = percentX * maxTilt;
 
             clickBtn.style.transition = 'none';
-            clickBtn.style.transform = rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(0.95);
+            clickBtn.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(0.95)`;
             clickBtn.style.filter = 'brightness(0.9)';
 
             setTimeout(() => {
@@ -649,7 +651,7 @@
             clickArea.appendChild(text);
             setTimeout(() => text.remove(), 800);
         }
-        // Safe TON Connect Initialization
+        
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 try {
