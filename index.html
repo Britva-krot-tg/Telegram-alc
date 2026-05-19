@@ -672,7 +672,11 @@
                  }
             }, 500);
         });
+await createPlayer();
+await loadPlayer();
 
+setInterval(savePlayer, 5000);
+        
         regenerateEnergy();
         setInterval(regenerateEnergy, 1000);
     </script>
