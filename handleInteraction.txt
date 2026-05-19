@@ -1,0 +1,16 @@
+    fetch(`${BACKEND_URL}/api/click`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: String(myTelegramId) })
+    })
+    .then(res => {
+        if (res.status === 400) serverAuth(); // Если сбились счетчики — обновляем данные
+        return res.json();
+    })
+    .then(data => {
+        score = data.score;
+        currentEnergy = data.energy;
+        scoreEl.innerText = score.toFixed(4);
+        updateEnergyUI();
+    })
+    .catch(err => console.error("БД не засчитала клик:", err));
