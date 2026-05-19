@@ -1,2 +1,0 @@
-    serverAuth();
-    setInterval(serverAuth, 10000);
