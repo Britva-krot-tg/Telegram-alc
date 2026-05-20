@@ -6,3 +6,16 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 //создаём клиента 
 export const supabase = createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
+import { supabase } from './lib/supabaseClient'
+
+async function getPosts() {
+  const { data, error } = await supabase
+    .from('users') // Имя твоей таблицы в Supabase
+    .select('*')   // Выбрать все колонки
+  
+  if (error) {
+    console.error('Ошибка при получении данных:', error)
+  } else {
+    console.log('Твои данные из базы:', data)
+  }
+}
