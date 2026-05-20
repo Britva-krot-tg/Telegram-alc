@@ -19,3 +19,11 @@ async function getPosts() {
     console.log('Твои данные из базы:', data)
   }
 }
+async function addPost() {
+  const { data, error } = await supabase
+    .from('posts')
+    .insert([
+      { title: 'Мой новый пост', content: 'Привет, Supabase!' }
+    ])
+    .select() // Возвращает добавленную строку
+}
