@@ -435,14 +435,16 @@
     </div>
     <script>
         // --- ⚠️ НАСТРОЙКИ БАЗЫ ДАННЫХ SUPABASE (ВСТАВЬ СВОИ) ⚠️ ---
-        const SUPABASE_URL = "https://bgkyseldpfefdqlwnsjm.supabase.co"
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJna3lzZWxkcGZlZmRxbHduc2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTI4MDgsImV4cCI6MjA5NDcyODgwOH0.EtVQ03ao0z63S5sAMPeGf8FAfGgjcv8Ix9UC8sGkDfw"
+        const SUPABASE_URL = "https://bgkyseldpfefdqlwnsjm.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJna3lzZWxkcGZlZmRxbHduc2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTI4MDgsImV4cCI6MjA5NDcyODgwOH0.EtVQ03ao0z63S5sAMPeGf8FAfGgjcv8Ix9UC8sGkDfw";
 
         let supabase = null;
-        if ( typeof window.supabase  !== 'undefined'){
-            supabase = wondow.supabase.createClient(SUPABASE_URL, SUPPABASE_ANON_KEY);
-        } else {
-            console.error("Библиотека Supabase не загрузилась!");
+        try {
+            if (typeof window.supabase !== 'undefined' && SUPABASE_URL.indexOf("your-project") === -1) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch(e) {
+            console.error("Ошибка инициализации Supabase клиента:", e);
         }
 
         // --- TON DATA SETTINGS ---
@@ -501,17 +503,43 @@
             return BASE_ENERGY;
         }
 
-        // КЛАУД-ЗАГРУЗКА ИЗ БАЗЫ SUPABASE ПО ID
+        // Функция скрытия экрана загрузки
+        function hideLoadingOverlay() {
+            const loader = document.getElementById('loading-overlay');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 300);
+            }
+        }
+
+        // БЕЗОПАСНАЯ КЛАУД-ЗАГРУЗКА ИЗ БАЗЫ С ТАЙМАУТОМ
         async function loadPlayerData() {
+            // Если Supabase не подключен вообще, сразу включаем локальный режим
+            if (!supabase) {
+                console.log("Supabase не настроен. Запуск в локальном режиме.");
+                loadFallbackData();
+                hideLoadingOverlay();
+                return;
+            }
+
+            // Создаем таймер прерывания на 3 секунды, чтобы игра не висла вечно
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Supabase timeout")), 3000)
+            );
             try {
-                let { data: player, error } = await supabase
+                // Пытаемся получить данные из базы данных с ограничением по времени
+                const networkPromise = supabase
                     .from('players')
                     .select('*')
                     .eq('telegram_id', myTelegramId)
-                    .single();
+                    .maybeSingle(); // Использование maybeSingle безопаснее, чем single
 
-                if (error && error.code === 'PGRST116') {
-                    // Новый игрок — регистрируем запись в таблице
+                const { data: player, error } = await Promise.race([networkPromise, timeoutPromise]);
+
+                if (error) throw error;
+
+                if (!player) {
+                    // Нового игрока регистрируем в таблице
                     const newPlayer = {
                         telegram_id: myTelegramId,
                         username: myFirstName,
@@ -521,44 +549,61 @@
                         last_click_time: Date.now()
                     };
                     await supabase.from('players').insert([newPlayer]);
-                    score = 0.0;
-                    currentEnergy = BASE_ENERGY;
-                    currentUpgradeLevel = 0;
-                    lastClickTime = Date.now();
-                } else if (player) {
+                    loadFallbackData();
+                } else {
                     // Старый игрок — подтягиваем значения
                     score = parseFloat(player.balance) || 0;
                     currentUpgradeLevel = parseInt(player.upgrade_level) || 0;
                     lastClickTime = parseInt(player.last_click_time) || Date.now();
-                    
                     maxEnergy = getMaxEnergy();
                     currentEnergy = player.current_energy !== null ? parseFloat(player.current_energy) : maxEnergy;
                 }
 
+            } catch (err) {
+                console.error("Ошибка облака, переключение на локальный localStorage:", err);
+                // Если база данных упала или зависла — берем данные из localStorage, чтобы игрок мог играть
+                loadFallbackData();
+            } finally {
+                // В любом случае обновляем интерфейс и убираем заставку
                 scoreEl.innerText = score.toFixed(4);
                 regenerateEnergy();
-                
-                // Убираем лоадер загрузки
-                document.getElementById('loading-overlay').style.opacity = '0';
-                setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 300);
-
-            } catch (err) {
-                console.error("Cloud data load error:", err);
-                document.getElementById('loading-overlay').innerText = "Cloud Connection Error";
+                hideLoadingOverlay();
             }
         }
 
-        // СИНХРОНИЗАЦИЯ С ОБЛАКОМ
+        // Запасная функция загрузки из localStorage, если база не отвечает
+        function loadFallbackData() {
+            score = parseFloat(localStorage.getItem('clicker_score')) || 0.0;
+            currentUpgradeLevel = parseInt(localStorage.getItem('clicker_upgrade_level')) || 0;
+            lastClickTime = parseInt(localStorage.getItem('clicker_last_click_time')) || Date.now();
+            maxEnergy = getMaxEnergy();
+            currentEnergy = localStorage.getItem('clicker_current_energy') !== null ? parseFloat(localStorage.getItem('clicker_current_energy')) : maxEnergy;
+        }
+
+        // СИНХРОНИЗАЦИЯ С ОБЛАКОМ И LOCALSTORAGE
         async function savePlayerData() {
-            await supabase
-                .from('players')
-                .update({ 
-                    balance: score, 
-                    current_energy: currentEnergy, 
-                    upgrade_level: currentUpgradeLevel,
-                    last_click_time: lastClickTime
-                })
-                .eq('telegram_id', myTelegramId);
+            // Сначала сохраняем локально (надежно)
+            localStorage.setItem('clicker_score', score);
+            localStorage.setItem('clicker_current_energy', currentEnergy);
+            localStorage.setItem('clicker_upgrade_level', currentUpgradeLevel);
+            localStorage.setItem('clicker_last_click_time', lastClickTime);
+
+            // Если база работает — шлем и туда
+            if (supabase) {
+                try {
+                    await supabase
+                        .from('players')
+                        .update({ 
+                            balance: score, 
+                            current_energy: currentEnergy, 
+                            upgrade_level: currentUpgradeLevel,
+                            last_click_time: lastClickTime
+                        })
+                        .eq('telegram_id', myTelegramId);
+                } catch(e) {
+                    console.error("Не удалось сохранить в облако:", e);
+                }
+            }
         }
 
         function regenerateEnergy() {
@@ -566,7 +611,6 @@
             const timePassed = now - lastClickTime;
             maxEnergy = getMaxEnergy();
             const energyPerMs = maxEnergy / REGEN_TIME_MS;
-
             if (timePassed > 0 && currentEnergy < maxEnergy) {
                 currentEnergy += timePassed * energyPerMs;
                 if (currentEnergy > maxEnergy) currentEnergy = maxEnergy;
@@ -656,7 +700,7 @@
                     currentEnergy = maxEnergy; 
                     lastClickTime = Date.now();
                     
-                    await savePlayerData(); // Сохраняем апгрейд в базу данных
+                    await savePlayerData(); 
                     
                     updateEnergyUI();
                     updateShopUI();
@@ -665,7 +709,6 @@
                 console.log("Transaction canceled.");
             }
         }
-
         let clickTimestamps = [];
         function checkClickRate() {
             const now = Date.now();
@@ -720,6 +763,7 @@
             const maxTilt = 25; 
             const tiltX = -percentY * maxTilt;
             const tiltY = percentX * maxTilt;
+
             clickBtn.style.transition = 'none';
             clickBtn.style.transform = rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(0.95);
             clickBtn.style.filter = 'brightness(0.9)';
@@ -765,7 +809,6 @@
             text.innerText = message;
             setupFloatingTextPosition(text, x, y);
         }
-
         function setupFloatingTextPosition(text, x, y) {
             const rect = clickArea.getBoundingClientRect();
             const relativeX = x - rect.left;
@@ -777,7 +820,7 @@
         }
         
         window.addEventListener('DOMContentLoaded', () => {
-            // Подгружаем прогресс аккаунта из базы при старте
+            // Запуск безопасной загрузки
             loadPlayerData();
 
             setTimeout(() => {
@@ -797,10 +840,7 @@
             }, 500);
         });
 
-        // Каждую секунду обновляем регенерацию энергии локально
         setInterval(regenerateEnergy, 1000);
-
-        // Каждые 5 секунд отправляем баланс и энергию в облако для сохранения
         setInterval(savePlayerData, 5000);
     </script>
 </body>
