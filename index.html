@@ -435,10 +435,15 @@
     </div>
     <script>
         // --- ⚠️ НАСТРОЙКИ БАЗЫ ДАННЫХ SUPABASE (ВСТАВЬ СВОИ) ⚠️ ---
-        const SUPABASE_URL = "https://bgkyseldpfefdqlwnsjm.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJna3lzZWxkcGZlZmRxbHduc2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTI4MDgsImV4cCI6MjA5NDcyODgwOH0.EtVQ03ao0z63S5sAMPeGf8FAfGgjcv8Ix9UC8sGkDfw";
+        const SUPABASE_URL = "https://bgkyseldpfefdqlwnsjm.supabase.co"
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJna3lzZWxkcGZlZmRxbHduc2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTI4MDgsImV4cCI6MjA5NDcyODgwOH0.EtVQ03ao0z63S5sAMPeGf8FAfGgjcv8Ix9UC8sGkDfw"
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabase = null;
+        if ( typeof window.supabase  !== 'undefined'){
+            supabase = wondow.supabase.createClient(SUPABASE_URL, SUPPABASE_ANON_KEY);
+        } else {
+            console.error("Библиотека Supabase не загрузилась!");
+        }
 
         // --- TON DATA SETTINGS ---
         const MY_TON_WALLET = "UQBT3bJqKbJMgQpWc4I5zPc15ep1eFxwuo-ocyTQ6WyJKV8q";
