@@ -434,17 +434,21 @@
         </div>
     </div>
     <script>
-        // --- ⚠️ НАСТРОЙКИ БАЗЫ ДАННЫХ SUPABASE (ВСТАВЬ СВОИ) ⚠️ ---
+       // --- ⚠️ НАСТРОЙКИ БАЗЫ ДАННЫХ SUPABASE (ВСТАВЬ СВОИ) ⚠️ ---
         const SUPABASE_URL = "https://bgkyseldpfefdqlwnsjm.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJna3lzZWxkcGZlZmRxbHduc2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTI4MDgsImV4cCI6MjA5NDcyODgwOH0.EtVQ03ao0z63S5sAMPeGf8FAfGgjcv8Ix9UC8sGkDfw";
 
-        let supabase = null;
+        // Исправленное объявление клиента (избегаем конфликта имён)
+        let db = null;
         try {
             if (typeof window.supabase !== 'undefined' && SUPABASE_URL.indexOf("your-project") === -1) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log("Supabase успешно инициализирован.");
+            } else {
+                console.log("Supabase не настроен или библиотека не загружена. Локальный режим.");
             }
         } catch(e) {
-            console.error("Ошибка инициализации Supabase клиента:", e);
+            console.error("Критическая ошибка при создании клиента базы данных:", e);
         }
 
         // --- TON DATA SETTINGS ---
@@ -503,7 +507,6 @@
             return BASE_ENERGY;
         }
 
-        // Функция скрытия экрана загрузки
         function hideLoadingOverlay() {
             const loader = document.getElementById('loading-overlay');
             if (loader) {
@@ -512,34 +515,26 @@
             }
         }
 
-        // БЕЗОПАСНАЯ КЛАУД-ЗАГРУЗКА ИЗ БАЗЫ С ТАЙМАУТОМ
+        // БЕЗОПАСНАЯ КЛАУД-ЗАГРУЗКА
         async function loadPlayerData() {
-            // Если Supabase не подключен вообще, сразу включаем локальный режим
-            if (!supabase) {
-                console.log("Supabase не настроен. Запуск в локальном режиме.");
+            // Если база недоступна, сразу включаем локальное сохранение
+            if (!db) {
                 loadFallbackData();
                 hideLoadingOverlay();
                 return;
             }
 
-            // Создаем таймер прерывания на 3 секунды, чтобы игра не висла вечно
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("Supabase timeout")), 3000)
-            );
             try {
-                // Пытаемся получить данные из базы данных с ограничением по времени
-                const networkPromise = supabase
+                // Пытаемся получить данные из базы данных
+                const { data: player, error } = await db
                     .from('players')
                     .select('*')
                     .eq('telegram_id', myTelegramId)
-                    .maybeSingle(); // Использование maybeSingle безопаснее, чем single
-
-                const { data: player, error } = await Promise.race([networkPromise, timeoutPromise]);
+                    .maybeSingle();
 
                 if (error) throw error;
-
                 if (!player) {
-                    // Нового игрока регистрируем в таблице
+                    // Создаем нового пользователя
                     const newPlayer = {
                         telegram_id: myTelegramId,
                         username: myFirstName,
@@ -548,10 +543,10 @@
                         upgrade_level: 0,
                         last_click_time: Date.now()
                     };
-                    await supabase.from('players').insert([newPlayer]);
+                    await db.from('players').insert([newPlayer]);
                     loadFallbackData();
                 } else {
-                    // Старый игрок — подтягиваем значения
+                    // Загружаем существующего пользователя
                     score = parseFloat(player.balance) || 0;
                     currentUpgradeLevel = parseInt(player.upgrade_level) || 0;
                     lastClickTime = parseInt(player.last_click_time) || Date.now();
@@ -560,18 +555,15 @@
                 }
 
             } catch (err) {
-                console.error("Ошибка облака, переключение на локальный localStorage:", err);
-                // Если база данных упала или зависла — берем данные из localStorage, чтобы игрок мог играть
+                console.error("Ошибка сети/базы. Переход на LocalStorage:", err);
                 loadFallbackData();
             } finally {
-                // В любом случае обновляем интерфейс и убираем заставку
                 scoreEl.innerText = score.toFixed(4);
                 regenerateEnergy();
                 hideLoadingOverlay();
             }
         }
 
-        // Запасная функция загрузки из localStorage, если база не отвечает
         function loadFallbackData() {
             score = parseFloat(localStorage.getItem('clicker_score')) || 0.0;
             currentUpgradeLevel = parseInt(localStorage.getItem('clicker_upgrade_level')) || 0;
@@ -582,16 +574,14 @@
 
         // СИНХРОНИЗАЦИЯ С ОБЛАКОМ И LOCALSTORAGE
         async function savePlayerData() {
-            // Сначала сохраняем локально (надежно)
             localStorage.setItem('clicker_score', score);
             localStorage.setItem('clicker_current_energy', currentEnergy);
             localStorage.setItem('clicker_upgrade_level', currentUpgradeLevel);
             localStorage.setItem('clicker_last_click_time', lastClickTime);
 
-            // Если база работает — шлем и туда
-            if (supabase) {
+            if (db) {
                 try {
-                    await supabase
+                    await db
                         .from('players')
                         .update({ 
                             balance: score, 
@@ -601,7 +591,7 @@
                         })
                         .eq('telegram_id', myTelegramId);
                 } catch(e) {
-                    console.error("Не удалось сохранить в облако:", e);
+                    console.error("Не удалось синхронизировать баланс с облаком:", e);
                 }
             }
         }
@@ -611,6 +601,7 @@
             const timePassed = now - lastClickTime;
             maxEnergy = getMaxEnergy();
             const energyPerMs = maxEnergy / REGEN_TIME_MS;
+
             if (timePassed > 0 && currentEnergy < maxEnergy) {
                 currentEnergy += timePassed * energyPerMs;
                 if (currentEnergy > maxEnergy) currentEnergy = maxEnergy;
@@ -629,7 +620,7 @@
 
             if (currentEnergy >= maxEnergy) {
                 cooldownTimerEl.innerText = "";
-            } else {
+                } else {
                 const energyNeeded = maxEnergy - currentEnergy;
                 const energyPerMs = maxEnergy / REGEN_TIME_MS;
                 const msRemaining = energyNeeded / energyPerMs;
@@ -709,6 +700,7 @@
                 console.log("Transaction canceled.");
             }
         }
+
         let clickTimestamps = [];
         function checkClickRate() {
             const now = Date.now();
@@ -727,7 +719,6 @@
                 showWarningText(clientX, clientY, "Too Fast!");
                 return;
             }
-
             regenerateEnergy();
             if (currentEnergy < 1) {
                 if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
@@ -809,6 +800,7 @@
             text.innerText = message;
             setupFloatingTextPosition(text, x, y);
         }
+
         function setupFloatingTextPosition(text, x, y) {
             const rect = clickArea.getBoundingClientRect();
             const relativeX = x - rect.left;
@@ -820,9 +812,12 @@
         }
         
         window.addEventListener('DOMContentLoaded', () => {
-            // Запуск безопасной загрузки
+            // Запускаем загрузку данных аккаунта
             loadPlayerData();
 
+            // Абсолютная железная гарантия: если через 1.5 секунды экран загрузки 
+            // всё еще висит — убираем его принудительно, чтобы дать пользователю играть!
+            setTimeout(hideLoadingOverlay, 1500);
             setTimeout(() => {
                 try {
                     if (typeof TON_CONNECT_UI !== 'undefined') {
